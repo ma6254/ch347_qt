@@ -248,6 +248,12 @@ QIcon MainWindow::get_tabbar_group_btn_icon(int index, int theme)
     return render_svg_icon(path, get_tabbar_btn_theme_color(theme));
 }
 
+/*******************************************************************************
+ * @brief 渲染SVG图标
+ * @param path  SVG文件路径
+ * @param color 图标颜色
+ * @return QIcon对象
+ ******************************************************************************/
 QIcon MainWindow::render_svg_icon(const QString &path, const QColor &color)
 {
     QSize baseSize(tabbar_btn_icon_size, tabbar_btn_icon_size);
@@ -267,6 +273,11 @@ QIcon MainWindow::render_svg_icon(const QString &path, const QColor &color)
     return QIcon(pixmap);
 }
 
+/*******************************************************************************
+ * @brief 获取导航栏按钮主题颜色
+ * @param theme 主题类型
+ * @return QColor对象
+ ******************************************************************************/
 QColor MainWindow::get_tabbar_btn_theme_color(int theme)
 {
     QColor color = QColor(0, 0, 0);
@@ -286,6 +297,11 @@ QColor MainWindow::get_tabbar_btn_theme_color(int theme)
     return color;
 }
 
+/*******************************************************************************
+ * @brief 设置导航栏导航按钮的图标
+ * @param expanded 导航栏是否展开
+ * @param theme 主题类型
+ ******************************************************************************/
 void MainWindow::set_tabbar_nav_btn_icon(bool expanded, int theme)
 {
     QString icon_path = QString(":/%1_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg")
@@ -298,6 +314,10 @@ void MainWindow::set_tabbar_nav_btn_icon(bool expanded, int theme)
     ui->tabbar_nav_btn->setFont(tabbar_btn_font);
 }
 
+/*******************************************************************************
+ * @brief 设置导航栏主题切换按钮的图标
+ * @param theme 主题类型
+ ******************************************************************************/
 void MainWindow::set_tabbar_theme_btn_icon(int theme)
 {
     QString name = "";
@@ -322,6 +342,10 @@ void MainWindow::set_tabbar_theme_btn_icon(int theme)
     ui->tabbar_theme_btn->setFont(tabbar_btn_font);
 }
 
+/*******************************************************************************
+ * @brief 设置导航栏所有按钮的主题
+ * @param theme 主题类型
+ ******************************************************************************/
 void MainWindow::set_tabbar_btn_theme(int theme)
 {
     set_tabbar_nav_btn_icon(tabbar_is_expanded, theme);
