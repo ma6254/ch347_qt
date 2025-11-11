@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>arrow_menu_close_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>arrow_menu_open_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>home_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>info_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>settings_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>dark_mode_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+        <file>light_mode_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg</file>
+    </qresource>
+</RCC>

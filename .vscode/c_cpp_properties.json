@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Qt",
+            "includePath": [
+                "C:\\Qt5\\5.15.2\\mingw81_64\\include",
+                "C:\\Qt5\\5.15.2\\mingw81_64\\include\\*\\**",
+                "C:\\Qt5\\5.15.2\\mingw81_64\\include\\QtCharts",
+                "C:\\Qt5\\5.15.2\\Src\\qtwebengine\\src\\webenginewidgets\\api",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/main_window",
+                "${workspaceFolder}/src/views",
+                "${workspaceFolder}/build/Desktop_Qt_5_15_2_MinGW_64_bit-Debug/ch347_qt_autogen/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "__STATIC_INLINE"
+            ]
+        }
+    ],
+    "version": 4
+}
