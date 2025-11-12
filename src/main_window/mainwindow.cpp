@@ -4,23 +4,14 @@
 #include <QMetaEnum>
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "config.h"
 
-static const QString tabbar_nav_btn_light_style = R""(
+
+
+static const QString tabbar_nav_btn_style = R""(
 QToolButton {
-
-    color: rgba(0,0,0,1.0);
-
-    border-style: solid;
-    border-color: rgba(0,0,0,0);
-    border-width: 0px;
-    border-radius: 0px;
-}
-)"";
-
-static const QString tabbar_nav_btn_dark_style = R""(
-QToolButton {
-
     color: rgba(255,255,255,1.0);
+    background-color: rgba(20,45,86,0.5);
 
     border-style: solid;
     border-color: rgba(0,0,0,0);
@@ -50,6 +41,7 @@ QToolButton {
 
 QToolButton::checked {
     background-color: rgba(0,147,221,0.7);
+    border-left: 3px solid red;
 
 }
 
@@ -58,23 +50,10 @@ QToolButton::!checked {
 }
 )"";
 
-static const QString main_window_light_style = R""(
-MainWindow {
-    background-color: #FFFFFF;
-}
-)"";
-
-static const QString main_window_dark_style = R""(
-MainWindow {
-    background-color: #434343;
-}
-)"";
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     tabbar_is_expanded = false;
-    theme = THEME_LIGHT;
     tabbar_btn_icon_size = 42;
     tabbar_btn_font = QFont("Microsoft YaHei", 12);
 
@@ -116,7 +95,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->tabWidget->tabBar()->setVisible(false); // 隐藏tabbar
 
     set_navigate_expand(tabbar_is_expanded);
-    set_tabbar_btn_theme(theme);
+    set_tabbar_btn_theme(Config::get_global()->theme);
+    set_main_window_theme();
+
+    ui->tabbar_nav_btn->setStyleSheet(tabbar_nav_btn_style);
 }
 
 MainWindow::~MainWindow()
@@ -153,29 +135,19 @@ void MainWindow::tabbar_btn_group_clicked_cb(QAbstractButton *button)
  ******************************************************************************/
 void MainWindow::tabbar_theme_btn_clicked_cb(void)
 {
-    if (theme == THEME_LIGHT)
+    if (Config::get_global()->theme == Theme::LIGHT)
     {
-        theme = THEME_DARK;
+        Config::get_global()->theme = Theme::DARK;
     }
     else
     {
-        theme = THEME_LIGHT;
+        Config::get_global()->theme = Theme::LIGHT;
     }
 
-    switch (theme)
-    {
-    case THEME_LIGHT:
-        setStyleSheet(main_window_light_style);
-        ui->tabbar_nav_btn->setStyleSheet(tabbar_nav_btn_light_style);
-        
-        break;
-        case THEME_DARK:
-        setStyleSheet(main_window_dark_style);
-        ui->tabbar_nav_btn->setStyleSheet(tabbar_nav_btn_dark_style);
-        break;
-    }
+    set_main_window_theme();
+    set_tabbar_btn_theme(Config::get_global()->theme);
 
-    set_tabbar_btn_theme(theme);
+    Config::get_global()->save_to_file();
 }
 
 /*******************************************************************************
@@ -185,7 +157,7 @@ void MainWindow::tabbar_theme_btn_clicked_cb(void)
  ******************************************************************************/
 void MainWindow::set_navigate_expand(bool expanded)
 {
-    set_tabbar_nav_btn_icon(expanded, theme);
+    set_tabbar_nav_btn_icon(expanded, Config::get_global()->theme);
 
     if (expanded)
     {
@@ -245,7 +217,7 @@ QIcon MainWindow::get_tabbar_group_btn_icon(int index, int theme)
 
     // qDebug("[MainWindow] get_tabbar_group_btn_icon index:%d theme:%d path: \"%s\"", index, theme, qPrintable(path));
 
-    return render_svg_icon(path, get_tabbar_btn_theme_color(theme));
+    return render_svg_icon(path, get_tabbar_btn_theme_color());
 }
 
 /*******************************************************************************
@@ -264,6 +236,8 @@ QIcon MainWindow::render_svg_icon(const QString &path, const QColor &color)
     pixmap.fill(Qt::transparent);
 
     QSvgRenderer renderer(path);
+    Q_ASSERT_X(renderer.isValid(), "MainWindow::render_svg_icon", "valid current document");
+
     QPainter painter(&pixmap);
     renderer.render(&painter);
     painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
@@ -280,21 +254,15 @@ QIcon MainWindow::render_svg_icon(const QString &path, const QColor &color)
  ******************************************************************************/
 QColor MainWindow::get_tabbar_btn_theme_color(int theme)
 {
-    QColor color = QColor(0, 0, 0);
-
-    switch (theme)
+    if (theme < 0)
     {
-    case THEME_LIGHT:
-        color = QColor("#434343");
-        break;
-    case THEME_DARK:
-        color = QColor("#F3F3F3");
-        break;
-    default:
-        Q_ASSERT_X(false, "MainWindow::set_theme", "Unknown THEME");
+        Theme *cur_theme = Theme::get_theme(Config::get_global()->theme);
+        return cur_theme->get_tabbar_btn_icon_color();
     }
 
-    return color;
+    Theme::THEME theme_type = static_cast<Theme::THEME>(theme);
+    Theme *cur_theme = Theme::get_theme(theme_type);
+    return cur_theme->get_tabbar_btn_icon_color();
 }
 
 /*******************************************************************************
@@ -307,7 +275,7 @@ void MainWindow::set_tabbar_nav_btn_icon(bool expanded, int theme)
     QString icon_path = QString(":/%1_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg")
                             .arg(expanded ? "arrow_menu_close" : "arrow_menu_open");
 
-    QIcon btn_icon = render_svg_icon(icon_path, get_tabbar_btn_theme_color(theme));
+    QIcon btn_icon = render_svg_icon(icon_path, get_tabbar_btn_theme_color());
 
     ui->tabbar_nav_btn->setIcon(btn_icon);
     ui->tabbar_nav_btn->setIconSize(QSize(tabbar_btn_icon_size, tabbar_btn_icon_size));
@@ -324,10 +292,10 @@ void MainWindow::set_tabbar_theme_btn_icon(int theme)
 
     switch (theme)
     {
-    case THEME_LIGHT:
+    case Theme::LIGHT:
         name = QString("dark_mode");
         break;
-    case THEME_DARK:
+    case Theme::DARK:
         name = QString("light_mode");
         break;
     default:
@@ -336,7 +304,7 @@ void MainWindow::set_tabbar_theme_btn_icon(int theme)
 
     QString icon_path = QString(":/%1_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg").arg(name);
 
-    QIcon btn_icon = render_svg_icon(icon_path, get_tabbar_btn_theme_color(theme));
+    QIcon btn_icon = render_svg_icon(icon_path, get_tabbar_btn_theme_color());
     ui->tabbar_theme_btn->setIcon(btn_icon);
     ui->tabbar_theme_btn->setIconSize(QSize(tabbar_btn_icon_size, tabbar_btn_icon_size));
     ui->tabbar_theme_btn->setFont(tabbar_btn_font);
@@ -363,4 +331,22 @@ void MainWindow::set_tabbar_btn_theme(int theme)
         cur_btn->setIconSize(QSize(tabbar_btn_icon_size, tabbar_btn_icon_size));
         cur_btn->setFont(tabbar_btn_font);
     }
+}
+
+void MainWindow::set_main_window_theme(int theme)
+{
+    Theme *cur_theme;
+
+    if (theme < 0)
+    {
+      cur_theme = Theme::get_theme(Config::get_global()->theme);
+    }
+    else
+    {
+        Theme::THEME theme_type = static_cast<Theme::THEME>(theme);
+        cur_theme = Theme::get_theme(theme_type);
+    }
+
+
+    setStyleSheet(cur_theme->get_main_window_style());
 }

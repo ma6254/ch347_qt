@@ -3,6 +3,8 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
+#include "theme.h"
+#include "config.h"
 
 int main(int argc, char *argv[])
 {
@@ -17,6 +19,13 @@ int main(int argc, char *argv[])
             break;
         }
     }
+    
+    // 配置文件初始化
+    Config::global_init();
+
+    // 主题初始化
+    Theme::theme_init();
+
     MainWindow w;
     w.show();
     return a.exec();

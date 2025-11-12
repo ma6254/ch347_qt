@@ -7,6 +7,7 @@
 #include "main_view.h"
 #include "settings_view.h"
 #include "about_view.h"
+#include "theme.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -32,13 +33,6 @@ public:
     };
     Q_ENUM(TABBAR);
 
-    enum THEME
-    {
-        THEME_LIGHT = 0,
-        THEME_DARK,
-    };
-    Q_ENUM(THEME);
-
 private slots:
 
     void tabbar_nav_btn_clicked_cb(void);
@@ -49,7 +43,6 @@ private:
     Ui::MainWindow *ui;
     QButtonGroup *tabbar_buttonGroup;
     bool tabbar_is_expanded = false;
-    int theme;
     int tabbar_btn_icon_size;
     QFont tabbar_btn_font;
 
@@ -59,11 +52,13 @@ private:
     AboutView *about_view;
 
     QIcon render_svg_icon(const QString &path, const QColor &color);
-    QColor get_tabbar_btn_theme_color(int theme);
+    QColor get_tabbar_btn_theme_color(int theme = -1);
     void set_navigate_expand(bool expanded);
     QIcon get_tabbar_group_btn_icon(int index, int theme);
     void set_tabbar_nav_btn_icon(bool expanded, int theme);
     void set_tabbar_theme_btn_icon(int theme);
     void set_tabbar_btn_theme(int theme);
+
+    void set_main_window_theme(int theme = -1);
 };
 #endif // MAINWINDOW_H
