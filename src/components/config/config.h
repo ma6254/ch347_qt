@@ -3,8 +3,10 @@
 
 #include <QObject>
 #include <QDateTime>
+#include <QFont>
 #include <yaml-cpp/yaml.h>
 #include "base_config.h"
+#include "font_config.h"
 #include "theme.h"
 
 class Config : public BaseConfig
@@ -44,6 +46,7 @@ public:
 
     QDateTime latest;
     Theme::THEME theme;
+    QFont font;
 
 private:
 

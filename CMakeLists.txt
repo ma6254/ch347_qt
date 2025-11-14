@@ -25,6 +25,18 @@ include_directories(
     src/views
     src/components/theme
     src/components/config
+    src/components/utils
+)
+
+file(
+    GLOB
+    HEADER_FILES
+    src/*.h
+    src/main_window/*.h
+    src/views/*.h
+    src/components/theme/*.h
+    src/components/config/*.h
+    src/components/utils/*.h
 )
 
 file(
@@ -35,6 +47,7 @@ file(
     src/views/*.cpp
     src/components/theme/*.cpp
     src/components/config/*.cpp
+    src/components/utils/*.cpp
 )
 
 file(
@@ -43,6 +56,14 @@ file(
     src/main_window/*.ui
     src/views/*.ui
 )
+
+execute_process(
+    COMMAND git rev-parse HEAD
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT
+)
+
+add_definitions(-DGIT_COMMIT=\"${GIT_COMMIT}\")
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ch347_qt
@@ -65,6 +86,7 @@ else()
     else()
         add_executable(ch347_qt
             ${SRC_FILES}
+            ${HEADER_FILES}
             ${UI_FILES}
             ${QM_FILES}
         )

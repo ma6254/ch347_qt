@@ -6,20 +6,6 @@
 #include "./ui_mainwindow.h"
 #include "config.h"
 
-
-
-static const QString tabbar_nav_btn_style = R""(
-QToolButton {
-    color: rgba(255,255,255,1.0);
-    background-color: rgba(20,45,86,0.5);
-
-    border-style: solid;
-    border-color: rgba(0,0,0,0);
-    border-width: 0px;
-    border-radius: 0px;
-}
-)"";
-
 static const QString red_border_style = R""(
 
 border-style: solid;
@@ -29,36 +15,11 @@ border-radius: 0px;
 
 )"";
 
-static const QString style_btn_tabbar = R""(
-QToolButton {
-    color: rgba(255,255,255,1.0);
-
-    border-style: solid;
-    border-color: rgba(0,0,0,0);
-    border-width: 0px;
-    border-radius: 0px;
-}
-
-QToolButton::checked {
-    background-color: rgba(0,147,221,0.7);
-    border-left: 3px solid red;
-
-}
-
-QToolButton::!checked {
-    background-color: rgba(20,45,86,0.5);
-}
-)"";
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     tabbar_is_expanded = false;
-    tabbar_btn_icon_size = 42;
-    tabbar_btn_font = QFont("Microsoft YaHei", 12);
-
-    // ui->tabbar_widget->setStyleSheet(red_border_style);
-    ui->tabbar_theme_btn->setStyleSheet(style_btn_tabbar);
+    tabbar_btn_icon_size = 36;
 
     connect(ui->tabbar_nav_btn, &QToolButton::clicked, this, &MainWindow::tabbar_nav_btn_clicked_cb);     // 导航栏折叠按钮
     connect(ui->tabbar_theme_btn, &QToolButton::clicked, this, &MainWindow::tabbar_theme_btn_clicked_cb); // 主题切换按钮
@@ -71,14 +32,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(tabbar_buttonGroup, SIGNAL(buttonClicked(QAbstractButton *)), this, SLOT(tabbar_btn_group_clicked_cb(QAbstractButton *)));
 
-    for (uint32_t i = 0; i < tabbar_buttonGroup->buttons().size(); i++)
-    {
-        QToolButton *btn = qobject_cast<QToolButton *>(tabbar_buttonGroup->buttons().at(i));
-        if (btn == nullptr)
-            continue;
-
-        btn->setStyleSheet(style_btn_tabbar);
-    }
 
     main_view = new MainView(this);
     settings_view = new SettingsView(this);
@@ -95,10 +48,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->tabWidget->tabBar()->setVisible(false); // 隐藏tabbar
 
     set_navigate_expand(tabbar_is_expanded);
-    set_tabbar_btn_theme(Config::get_global()->theme);
+    set_tabbar_btn_theme();
     set_main_window_theme();
 
-    ui->tabbar_nav_btn->setStyleSheet(tabbar_nav_btn_style);
+    auto cur_theme = Theme::get_theme(Config::get_global()->theme);
+
+    ui->tabwidget_outline_widget->setStyleSheet(R""(
+QWidget#tabwidget_outline_widget {
+    background-color: transparent;
+}
+)"");
+
+    ui->tabWidget->setStyleSheet(R""(
+QTabWidget::pane{
+    background: transparent;
+    border:none;
+}
+)"");
+
 }
 
 MainWindow::~MainWindow()
@@ -145,7 +112,7 @@ void MainWindow::tabbar_theme_btn_clicked_cb(void)
     }
 
     set_main_window_theme();
-    set_tabbar_btn_theme(Config::get_global()->theme);
+    set_tabbar_btn_theme();
 
     Config::get_global()->save_to_file();
 }
@@ -157,7 +124,7 @@ void MainWindow::tabbar_theme_btn_clicked_cb(void)
  ******************************************************************************/
 void MainWindow::set_navigate_expand(bool expanded)
 {
-    set_tabbar_nav_btn_icon(expanded, Config::get_global()->theme);
+    set_tabbar_nav_btn_icon(expanded);
 
     if (expanded)
     {
@@ -192,9 +159,11 @@ void MainWindow::set_navigate_expand(bool expanded)
     }
 }
 
-QIcon MainWindow::get_tabbar_group_btn_icon(int index, int theme)
+QIcon MainWindow::get_tabbar_group_btn_icon(int index)
 {
     QString name = "";
+
+    auto cur_theme = Theme::get_theme(Config::get_global()->theme);
 
     switch (index)
     {
@@ -217,7 +186,7 @@ QIcon MainWindow::get_tabbar_group_btn_icon(int index, int theme)
 
     // qDebug("[MainWindow] get_tabbar_group_btn_icon index:%d theme:%d path: \"%s\"", index, theme, qPrintable(path));
 
-    return render_svg_icon(path, get_tabbar_btn_theme_color());
+    return render_svg_icon(path, cur_theme->get_foreground_color());
 }
 
 /*******************************************************************************
@@ -248,49 +217,34 @@ QIcon MainWindow::render_svg_icon(const QString &path, const QColor &color)
 }
 
 /*******************************************************************************
- * @brief 获取导航栏按钮主题颜色
- * @param theme 主题类型
- * @return QColor对象
- ******************************************************************************/
-QColor MainWindow::get_tabbar_btn_theme_color(int theme)
-{
-    if (theme < 0)
-    {
-        Theme *cur_theme = Theme::get_theme(Config::get_global()->theme);
-        return cur_theme->get_tabbar_btn_icon_color();
-    }
-
-    Theme::THEME theme_type = static_cast<Theme::THEME>(theme);
-    Theme *cur_theme = Theme::get_theme(theme_type);
-    return cur_theme->get_tabbar_btn_icon_color();
-}
-
-/*******************************************************************************
  * @brief 设置导航栏导航按钮的图标
  * @param expanded 导航栏是否展开
  * @param theme 主题类型
  ******************************************************************************/
-void MainWindow::set_tabbar_nav_btn_icon(bool expanded, int theme)
+void MainWindow::set_tabbar_nav_btn_icon(bool expanded)
 {
+    auto cur_theme = Theme::get_theme(Config::get_global()->theme);
+
     QString icon_path = QString(":/%1_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg")
                             .arg(expanded ? "arrow_menu_close" : "arrow_menu_open");
 
-    QIcon btn_icon = render_svg_icon(icon_path, get_tabbar_btn_theme_color());
+    QIcon btn_icon = render_svg_icon(icon_path, cur_theme->get_foreground_color());
 
     ui->tabbar_nav_btn->setIcon(btn_icon);
     ui->tabbar_nav_btn->setIconSize(QSize(tabbar_btn_icon_size, tabbar_btn_icon_size));
-    ui->tabbar_nav_btn->setFont(tabbar_btn_font);
+    ui->tabbar_nav_btn->setFont(Config::get_global()->font);
 }
 
 /*******************************************************************************
  * @brief 设置导航栏主题切换按钮的图标
  * @param theme 主题类型
  ******************************************************************************/
-void MainWindow::set_tabbar_theme_btn_icon(int theme)
+void MainWindow::set_tabbar_theme_btn_icon()
 {
+    auto cur_theme = Theme::get_theme(Config::get_global()->theme);
     QString name = "";
 
-    switch (theme)
+    switch (Config::get_global()->theme)
     {
     case Theme::LIGHT:
         name = QString("dark_mode");
@@ -304,20 +258,23 @@ void MainWindow::set_tabbar_theme_btn_icon(int theme)
 
     QString icon_path = QString(":/%1_24dp_000000_FILL0_wght400_GRAD0_opsz24.svg").arg(name);
 
-    QIcon btn_icon = render_svg_icon(icon_path, get_tabbar_btn_theme_color());
+    QIcon btn_icon = render_svg_icon(icon_path, cur_theme->get_foreground_color());
     ui->tabbar_theme_btn->setIcon(btn_icon);
     ui->tabbar_theme_btn->setIconSize(QSize(tabbar_btn_icon_size, tabbar_btn_icon_size));
-    ui->tabbar_theme_btn->setFont(tabbar_btn_font);
+    ui->tabbar_theme_btn->setFont(Config::get_global()->font);
 }
 
 /*******************************************************************************
  * @brief 设置导航栏所有按钮的主题
  * @param theme 主题类型
  ******************************************************************************/
-void MainWindow::set_tabbar_btn_theme(int theme)
+void MainWindow::set_tabbar_btn_theme()
 {
-    set_tabbar_nav_btn_icon(tabbar_is_expanded, theme);
-    set_tabbar_theme_btn_icon(theme);
+    
+    set_tabbar_nav_btn_icon(tabbar_is_expanded);
+    set_tabbar_theme_btn_icon();
+
+    auto cur_theme = Theme::get_theme(Config::get_global()->theme);
 
     for (uint32_t btn_i = 0; btn_i < tabbar_buttonGroup->buttons().size(); btn_i++)
     {
@@ -325,28 +282,91 @@ void MainWindow::set_tabbar_btn_theme(int theme)
         if (cur_btn == nullptr)
             continue;
 
-        QIcon btn_icon = get_tabbar_group_btn_icon(btn_i, theme);
+        QIcon btn_icon = get_tabbar_group_btn_icon(btn_i);
 
         cur_btn->setIcon(btn_icon);
         cur_btn->setIconSize(QSize(tabbar_btn_icon_size, tabbar_btn_icon_size));
-        cur_btn->setFont(tabbar_btn_font);
+        cur_btn->setFont(Config::get_global()->font);
     }
 }
 
-void MainWindow::set_main_window_theme(int theme)
+void MainWindow::set_main_window_theme()
 {
-    Theme *cur_theme;
+    auto cur_theme = Theme::get_theme(Config::get_global()->theme);
 
-    if (theme < 0)
+
+    // setStyleSheet(cur_theme->get_main_window_style());
+
+    setStyleSheet(QString(R""(
+QMainWindow {
+    background-color: %1;
+}
+)"").arg(cur_theme->get_background_color().name(QColor::HexArgb)));
+
+//     ui->tabWidget->setStyleSheet(QString(R""(
+// QTabWidget {
+//     background-color: #%1;
+// }
+// )"").arg(cur_theme->get_background_color().rgb() & 0xFFFFF, 6, 16, QChar('0')));
+
+    auto tarbar_nav_btn_style_template = QString(R""(
+QToolButton {
+    color: %1;
+    background-color: transparent;
+
+    border-style: solid;
+    border-color: rgba(0,0,0,0);
+    border-width: 0px;
+    border-radius: 0px;
+}
+)"");
+
+    auto tarbar_nav_btn_style = QString(tarbar_nav_btn_style_template)
+                                    .arg(cur_theme->get_foreground_color().name(QColor::HexArgb));
+
+    auto tarbar_btn_style_tmplate = QString(R""(
+QToolButton {
+    color: %1;
+    background-color: transparent;
+
+    border-style: solid;
+    border-color: rgba(0,0,0,0);
+    border-width: 0px;
+    border-radius: 0px;
+}
+
+QToolButton::checked {
+    border-left: 2px solid %2;
+}
+
+)"");
+
+    auto tarbar_btn_style = QString(tarbar_btn_style_tmplate)
+                                .arg(cur_theme->get_foreground_color().name(QColor::HexArgb))
+                                .arg(cur_theme->get_highlight_color().name(QColor::HexArgb));
+
+    ui->tabbar_nav_btn->setStyleSheet(tarbar_nav_btn_style);
+    ui->tabbar_theme_btn->setStyleSheet(tarbar_btn_style);
+
+    for (uint32_t i = 0; i < tabbar_buttonGroup->buttons().size(); i++)
     {
-      cur_theme = Theme::get_theme(Config::get_global()->theme);
-    }
-    else
-    {
-        Theme::THEME theme_type = static_cast<Theme::THEME>(theme);
-        cur_theme = Theme::get_theme(theme_type);
+        QToolButton *btn = qobject_cast<QToolButton *>(tabbar_buttonGroup->buttons().at(i));
+        if (btn == nullptr)
+            continue;
+
+        btn->setStyleSheet(tarbar_btn_style);
     }
 
+    QString tabbar_widget_style = QString(R""(
+QWidget#tabbar_widget {
+    background-color: %2;
+    border-right: 0px solid %1;
+}
+)"")
+                                      .arg(cur_theme->get_foreground_color().name(QColor::HexArgb))
+                                      .arg(cur_theme->get_accent_color().name(QColor::HexArgb));
 
-    setStyleSheet(cur_theme->get_main_window_style());
+    ui->tabbar_widget->setStyleSheet(tabbar_widget_style);
+
+    about_view->set_theme();
 }

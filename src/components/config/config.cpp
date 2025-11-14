@@ -40,6 +40,8 @@ Config *Config::get_default()
     Config *config = new Config();
     config->theme = Theme::LIGHT; // 默认主题为浅色主题
 
+    config->font = QFont("Microsoft YaHei", 12);
+
     return config;
 }
 

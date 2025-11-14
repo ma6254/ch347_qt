@@ -44,21 +44,18 @@ private:
     QButtonGroup *tabbar_buttonGroup;
     bool tabbar_is_expanded = false;
     int tabbar_btn_icon_size;
-    QFont tabbar_btn_font;
-
 
     MainView *main_view;
     SettingsView *settings_view;
     AboutView *about_view;
 
     QIcon render_svg_icon(const QString &path, const QColor &color);
-    QColor get_tabbar_btn_theme_color(int theme = -1);
     void set_navigate_expand(bool expanded);
-    QIcon get_tabbar_group_btn_icon(int index, int theme);
-    void set_tabbar_nav_btn_icon(bool expanded, int theme);
-    void set_tabbar_theme_btn_icon(int theme);
-    void set_tabbar_btn_theme(int theme);
+    QIcon get_tabbar_group_btn_icon(int index);
+    void set_tabbar_nav_btn_icon(bool expanded);
+    void set_tabbar_theme_btn_icon();
+    void set_tabbar_btn_theme();
 
-    void set_main_window_theme(int theme = -1);
+    void set_main_window_theme();
 };
 #endif // MAINWINDOW_H

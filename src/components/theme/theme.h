@@ -22,21 +22,18 @@ public:
     static void theme_init();
     static Theme *get_theme(Theme::THEME theme_type);
 
-    /*******************************************************************************
-     * @brief 获取导航栏按钮图标主题颜色
-     ******************************************************************************/
-    QColor get_tabbar_btn_icon_color() { return tabbar_btn_icon_color; };
-
-    /*******************************************************************************
-     * @brief 获取主窗口样式表
-     ******************************************************************************/
-    QString get_main_window_style() { return main_window_style; };
+    QColor get_background_color() { return background_color; } // 背景色
+    QColor get_foreground_color() { return foreground_color; } // 前景色
+    QColor get_accent_color() { return accent_color; }         // 强调色
+    QColor get_highlight_color() { return highlight_color; }   // 高亮色
 
 private:
     static QList<Theme *> themes;
 
-    QColor tabbar_btn_icon_color;
-    QString main_window_style;
+    QColor background_color; // 背景色
+    QColor foreground_color; // 前景色，文本和线条颜色
+    QColor accent_color;     // 强调色，用于突出重要元素
+    QColor highlight_color;  // 高亮色，用于选中元素
 };
 
 #endif // THEME_H
